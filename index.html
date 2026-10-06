@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Deep Blue vs Kasparov</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Work+Sans:wght@400;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root{
+  --bg:#f3f5f8; --ink:#15202e; --muted:#5a6779; --line:#cfd6e0;
+  --accent:#0b5cad; --accent-ink:#fff; --sq:#dde4ee; --ok:#1d7a3a; --no:#b3261e; --card:#ffffff;
+  --display:"Playfair Display",Georgia,serif; --body:"Work Sans",system-ui,sans-serif; --mono:"JetBrains Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root{--bg:#0f141c;--ink:#e6ebf2;--muted:#9aa7b8;--line:#2a3442;--accent:#7fb2ff;--accent-ink:#0a1830;--sq:#1b2330;--ok:#7fd99a;--no:#ff8a80;--card:#151c27;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.55}
+.wrap{max-width:820px;margin:0 auto;padding:24px 16px 64px;display:grid;gap:26px}
+.board{height:16px;background:repeating-linear-gradient(90deg,var(--ink) 0 16px,transparent 16px 32px);opacity:.85}
+h1,h2{font-family:var(--display);margin:0;line-height:1.05}
+h1{font-size:clamp(40px,9vw,78px);font-weight:900}
+h2{font-size:clamp(26px,5vw,36px)}
+p{margin:0;max-width:65ch}
+[hidden]{display:none!important}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hook{font-size:clamp(19px,3.2vw,24px);font-weight:600;max-width:34ch}
+.sheet{background:var(--card);border:1px solid var(--line);padding:20px;display:grid;gap:14px;min-width:0}
+button,input{font:600 15px var(--body);border-radius:4px;padding:10px 14px}
+button{cursor:pointer;border:1px solid var(--accent);background:transparent;color:var(--accent)}
+button.on,button.primary{background:var(--accent);color:var(--accent-ink)}
+button:disabled{opacity:.5;cursor:default}
+input{border:1px solid var(--line);background:var(--bg);color:var(--ink);min-width:0;flex:1}
+.row{display:flex;flex-wrap:wrap;gap:10px}
+.result{font-family:var(--mono);font-size:14px;color:var(--muted)}
+.live{font-family:var(--mono);font-size:12px;color:var(--ok)}
+.tl{display:flex;flex-wrap:wrap;gap:8px}
+.tl button{font-family:var(--mono);font-size:14px;padding:8px 12px}
+.tl-card{border-left:3px solid var(--accent);padding:4px 0 4px 14px;min-height:100px;display:grid;gap:6px}
+.tl-card b{font-family:var(--display);font-size:24px}
+.score{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;font-family:var(--mono);text-align:center}
+.score div{background:var(--sq);padding:8px 2px;font-size:13px}
+.score strong{display:block;font-size:18px}
+.bars{display:grid;gap:6px}
+.bar{display:grid;grid-template-columns:110px 1fr 48px;gap:8px;align-items:center;font-family:var(--mono);font-size:13px}
+.bar i{display:block;height:18px;background:var(--accent);width:0;transition:width .4s}
+.bar span:last-child{text-align:right}
+.race{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.race > div{background:var(--sq);padding:14px;min-width:0}
+.big{font-family:var(--mono);font-size:clamp(22px,6vw,36px);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+ol.lb{margin:0;padding-left:24px;font-family:var(--mono);font-size:15px}
+.q{display:grid;gap:10px;padding-block:12px;border-top:1px dashed var(--line)}
+.q:first-child{border-top:0}
+.q blockquote{margin:0;font-family:var(--display);font-size:21px}
+.fb{font-size:14px;font-weight:600}.fb.ok{color:var(--ok)}.fb.no{color:var(--no)}
+.slide{aspect-ratio:16/9;background:#15202e;color:#e6ebf2;padding:clamp(14px,3vw,28px);display:grid;grid-template-rows:auto 1fr auto;gap:10px;overflow:hidden}
+.slide h3{font-family:var(--display);font-size:clamp(20px,4.4vw,38px);margin:0}
+.slide .grid{display:grid;grid-template-columns:1fr 1fr;gap:clamp(6px,1.4vw,14px)}
+.slide span{display:block;font-family:var(--mono);font-size:clamp(9px,1.4vw,12px);letter-spacing:.12em;text-transform:uppercase;color:#7fb2ff}
+.slide p{font-size:clamp(11px,1.9vw,16px);line-height:1.3}
+.slide small{font-size:clamp(8px,1.2vw,11px);color:#9aa7b8}
+#qr{background:#fff;padding:12px;width:max-content}
+ol.src{margin:0;padding-left:20px;font-size:14px;display:grid;gap:4px}
+ol.src a{color:var(--accent);overflow-wrap:anywhere}
+.note{font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="board" aria-hidden="true"></div>
+<header style="display:grid;gap:12px">
+  <span class="eyebrow">AI History · Track A · New York, May 1997</span>
+  <h1>Deep Blue vs Kasparov</h1>
+  <p class="hook">In 1997, a computer beat the world chess champion in a full match for the first time.</p>
+  <p class="live" id="status">Offline mode</p>
+</header>
+
+<!-- HOST PANEL: open the page with ?host at the end of the link -->
+<section class="sheet" id="host" hidden>
+  <span class="eyebrow">Host screen</span>
+  <h2>Scan to join</h2>
+  <div id="qr"></div>
+  <p class="result" id="joinUrl"></p>
+  <p class="result" id="playerCount">Players: 0</p>
+  <div class="row"><button type="button" id="reset">Reset all answers</button></div>
+</section>
+
+<section class="sheet" id="joinBox">
+  <span class="eyebrow">Step 0 · Join</span>
+  <h2>Your nickname</h2>
+  <div class="row"><input id="nick" maxlength="16" placeholder="e.g. Aina" autocomplete="off"><button type="button" class="primary" id="joinBtn">Join</button></div>
+  <p class="result" id="joinOut"></p>
+</section>
+
+<section class="sheet">
+  <span class="eyebrow">Step 1 · Predict</span>
+  <h2>1997 rematch. Who wins?</h2>
+  <div class="row"><button type="button" id="pH">Kasparov (human)</button><button type="button" id="pM">Deep Blue (machine)</button></div>
+  <p class="result" id="pOut">Vote first. Then wait for the reveal.</p>
+  <div class="bars" id="pBars"></div>
+  <div class="row" id="revealRow" hidden><button type="button" class="primary" id="revealBtn">Reveal the answer</button></div>
+  <div class="score" id="score" hidden></div>
+</section>
+
+<section class="sheet">
+  <span class="eyebrow">Step 2 · Explore the timeline</span>
+  <h2>Tap a year</h2>
+  <div class="tl" id="tl" role="group" aria-label="Timeline"></div>
+  <div class="tl-card" id="tlCard" aria-live="polite"></div>
+</section>
+
+<section class="sheet">
+  <span class="eyebrow">Step 3 · Speed challenge</span>
+  <h2>Can you think as fast as Deep Blue?</h2>
+  <p>Tap the button as many times as you can in 5 seconds. Each tap = 1 chess position.</p>
+  <div class="row"><button type="button" class="primary" id="go">Start</button><button type="button" id="tap" disabled>Tap!</button></div>
+  <div class="race">
+    <div><span class="eyebrow">You</span><div class="big" id="you">0</div></div>
+    <div><span class="eyebrow">Deep Blue (≈200 million/sec)</span><div class="big" id="db">0</div></div>
+  </div>
+  <p class="result" id="raceOut"></p>
+  <span class="eyebrow">Class top 5</span>
+  <ol class="lb" id="lb"><li>No scores yet</li></ol>
+</section>
+
+<section class="sheet">
+  <span class="eyebrow">Step 4 · Quiz</span>
+  <h2>Fact or myth?</h2>
+  <div id="quiz"></div>
+  <p class="result" id="qs">Score: 0 / 5</p>
+</section>
+
+<section style="display:grid;gap:10px">
+  <span class="eyebrow">1-slide summary</span>
+  <div class="slide" role="img" aria-label="Summary slide">
+    <h3>Deep Blue vs Kasparov (1997)</h3>
+    <div class="grid">
+      <div><span>Hook</span><p>A machine beat the world chess champion in a full match.</p></div>
+      <div><span>Context</span><p>1996: Kasparov beat IBM's Deep Blue 4–2. IBM upgraded the machine.</p></div>
+      <div><span>Turning point</span><p>May 1997: Deep Blue won 3½–2½. Kasparov suspected human help. IBM retired the machine.</p></div>
+      <div><span>Why it matters today</span><p>Brute-force search beat human skill. Today's AI (AlphaZero, ChatGPT) learns from data instead.</p></div>
+    </div>
+    <small>Sources: IBM History; Britannica; Wikipedia "Deep Blue versus Garry Kasparov".</small>
+  </div>
+</section>
+
+<section class="sheet">
+  <span class="eyebrow">Sources (key facts checked in 2+ sources)</span>
+  <ol class="src">
+    <li>IBM History, "Deep Blue" — <a href="https://www.ibm.com/history/deep-blue">ibm.com/history/deep-blue</a></li>
+    <li>Britannica, "Deep Blue" — <a href="https://www.britannica.com/topic/Deep-Blue">britannica.com</a></li>
+    <li>Wikipedia, "Deep Blue versus Garry Kasparov" — <a href="https://en.wikipedia.org/wiki/Deep_Blue_versus_Garry_Kasparov">en.wikipedia.org</a></li>
+    <li>The Conversation, "Twenty years on from Deep Blue vs Kasparov" — <a href="https://theconversation.com/twenty-years-on-from-deep-blue-vs-kasparov-how-a-chess-match-started-the-big-data-revolution-76882">theconversation.com</a></li>
+  </ol>
+  <p class="note">Built with help from an AI tool (Claude). No AI-generated images are used.</p>
+</section>
+<div class="board" aria-hidden="true"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module">
+/* ============ STEP A: PASTE YOUR FIREBASE CONFIG HERE ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyA9wS5aYnTZCLXPpHsB8lp8AN1rizseBUc",
+  authDomain: "deepblue-class.firebaseapp.com",
+  databaseURL: "https://deepblue-class-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "deepblue-class",
+  storageBucket: "deepblue-class.firebasestorage.app",
+  messagingSenderId: "1011367666056",
+  appId: "1:1011367666056:web:bbb65d6de91a8ea151da3d"
+};
+/* ================================================================= */
+
+const $ = id => document.getElementById(id);
+const isHost = new URLSearchParams(location.search).has('host');
+
+// one random id per phone (kept in the browser)
+let uid; try { uid = localStorage.getItem('uid'); } catch(e) {}
+if (!uid) { uid = Math.random().toString(36).slice(2, 12); try { localStorage.setItem('uid', uid); } catch(e) {} }
+let nick = ''; try { nick = localStorage.getItem('nick') || ''; } catch(e) {}
+
+// live database (null = offline mode, page still works)
+let fb = null;
+if (!firebaseConfig.apiKey.startsWith('PASTE')) {
+  try {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const d = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    const db = d.getDatabase(initializeApp(firebaseConfig));
+    fb = { set:(p,v)=>d.set(d.ref(db,p),v), on:(p,f)=>d.onValue(d.ref(db,p),s=>f(s.val()||{})), update:(v)=>d.update(d.ref(db),v) };
+    $('status').textContent = '● Live';
+  } catch (e) { $('status').textContent = 'Offline mode (database error)'; }
+}
+const save = (p, v) => fb && fb.set(p, v).catch(() => {});
+
+// ---------- join ----------
+function setJoined(){ $('joinOut').textContent = 'Joined as ' + nick + '.'; $('nick').value = nick; }
+if (nick) setJoined();
+$('joinBtn').onclick = () => {
+  const v = $('nick').value.trim().slice(0, 16);
+  if (!v) { $('joinOut').textContent = 'Type a nickname first.'; return; }
+  nick = v; try { localStorage.setItem('nick', v); } catch(e) {}
+  save('players/' + uid, v); setJoined();
+};
+if (!fb) $('joinBox').hidden = true;
+
+// ---------- host ----------
+if (isHost) {
+  $('host').hidden = false; $('revealRow').hidden = false; $('joinBox').hidden = true;
+  const url = location.origin + location.pathname;
+  $('joinUrl').textContent = url;
+  if (window.QRCode) new QRCode($('qr'), { text: url, width: 220, height: 220 });
+  $('reset').onclick = () => {
+    if (!fb || !confirm('Delete all answers?')) return;
+    fb.update({ players:null, predict:null, quiz:null, speed:null, reveal:null });
+  };
+  $('revealBtn').onclick = () => { if (fb) save('reveal', true); else reveal(); };
+}
+if (fb) fb.on('players', v => $('playerCount').textContent = 'Players: ' + Object.keys(v).length);
+
+// ---------- step 1: predict ----------
+const games=[['G1','K'],['G2','DB'],['G3','='],['G4','='],['G5','='],['G6','DB']];
+let myVote = null;
+function reveal(){
+  const s=$('score'); s.hidden=false;
+  s.innerHTML=games.map(g=>'<div>'+g[0]+'<strong>'+g[1]+'</strong></div>').join('');
+  $('pOut').textContent=(myVote==='M'?'Correct! ':myVote==='H'?'Surprise! ':'')+'Deep Blue won 3½–2½. K = Kasparov win, DB = Deep Blue win, = draw.';
+}
+function bars(el, rows){
+  const total = rows.reduce((a,r)=>a+r[1],0) || 1;
+  el.innerHTML = rows.map(r=>'<div class="bar"><span>'+r[0]+'</span><i style="width:'+Math.round(r[1]/total*100)+'%"></i><span>'+Math.round(r[1]/total*100)+'%</span></div>').join('');
+}
+function vote(v){
+  if (myVote) return; myVote = v;
+  $(v==='H'?'pH':'pM').classList.add('on'); $('pH').disabled = $('pM').disabled = true;
+  if (fb) { save('predict/' + uid, v); $('pOut').textContent = 'Vote saved. Wait for the reveal.'; }
+  else reveal();
+}
+$('pH').onclick=()=>vote('H'); $('pM').onclick=()=>vote('M');
+if (fb) {
+  fb.on('predict', v => { const a=Object.values(v); bars($('pBars'), [['Kasparov',a.filter(x=>x==='H').length],['Deep Blue',a.filter(x=>x==='M').length]]); });
+  fb.on('reveal', v => { if (v === true) reveal(); else $('score').hidden = true; });
+}
+
+// ---------- step 2: timeline ----------
+const ev=[
+ ['1985','The start','A project that becomes Deep Blue begins at Carnegie Mellon University. IBM later hires the team.'],
+ ['Feb 1996','Round 1, Philadelphia','Deep Blue wins Game 1, the first game a computer wins against a world champion in normal tournament time. Kasparov wins the match 4–2.'],
+ ['May 1997','Round 2, New York','An upgraded Deep Blue searches about 200 million positions per second. It wins the match 3½–2½.'],
+ ['Game 6','19 moves','Kasparov loses the final game in only 19 moves.'],
+ ['After','"Human help?"','Kasparov suspects people helped the machine during play. He asks for a rematch. IBM says no and retires Deep Blue.'],
+ ['Today','From search to learning','Deep Blue used brute-force search and rules from experts. Modern AI, like AlphaZero (2017), learns by itself.']
+];
+const tl=$('tl'), card=$('tlCard');
+function show(i){[...tl.children].forEach((b,j)=>b.classList.toggle('on',j===i));card.innerHTML='<b>'+ev[i][1]+'</b><p>'+ev[i][2]+'</p>'}
+ev.forEach((e,i)=>{const b=document.createElement('button');b.type='button';b.textContent=e[0];b.onclick=()=>show(i);tl.appendChild(b)});show(2);
+
+// ---------- step 3: speed + leaderboard ----------
+let n=0, running=false, best=0;
+const you=$('you'), dbn=$('db'), tap=$('tap'), out=$('raceOut');
+$('go').onclick=()=>{
+  if(running)return; running=true; n=0; you.textContent=0; tap.disabled=false; out.textContent='GO!'; const t0=performance.now();
+  (function tick(){const t=Math.min((performance.now()-t0)/1000,5); dbn.textContent=Math.floor(t*200e6).toLocaleString();
+    if(t<5)requestAnimationFrame(tick);
+    else{running=false;tap.disabled=true;
+      out.textContent='You: '+n+'. Deep Blue: 1,000,000,000. It is '+(n?Math.round(1e9/n).toLocaleString():'∞')+' times faster than you.';
+      if(n>best){best=Math.min(n,100); save('speed/'+uid,{name:nick||'Anonymous',taps:best});}}})();
+};
+tap.onclick=()=>{if(running){n++;you.textContent=n}};
+if (fb) fb.on('speed', v => {
+  const top = Object.values(v).sort((a,b)=>b.taps-a.taps).slice(0,5);
+  const lb = $('lb'); lb.textContent='';
+  if (!top.length) { lb.innerHTML='<li>No scores yet</li>'; return; }
+  top.forEach(r=>{const li=document.createElement('li'); li.textContent=r.name+' — '+r.taps+' taps'; lb.appendChild(li);});
+});
+
+// ---------- step 4: quiz + live class % ----------
+const qs=[
+ ['Deep Blue won its first match against Kasparov in 1996.',false,'Myth. Kasparov won 1996 (4–2). Deep Blue won the 1997 rematch.'],
+ ['Deep Blue learned chess by itself, like modern AI.',false,'Myth. It used fast search plus rules from human chess experts.'],
+ ['Deep Blue could check about 200 million positions per second.',true,'Fact. Speed of search was its main strength.'],
+ ['Kasparov lost the last game of the 1997 match in only 19 moves.',true,'Fact. Game 6 ended after 19 moves.'],
+ ['IBM gave Kasparov a second rematch in 1998.',false,'Myth. IBM said no and retired Deep Blue.']
+];
+let sc=0; const qz=$('quiz');
+qs.forEach((q,i)=>{const d=document.createElement('div');d.className='q';
+ d.innerHTML='<blockquote>"'+q[0]+'"</blockquote><div class="row"><button type="button" data-a="1">Fact</button><button type="button" data-a="0">Myth</button></div><p class="fb" aria-live="polite"></p><p class="live" data-live></p>';
+ const fb2=d.querySelector('.fb');
+ d.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(d.dataset.done)return;d.dataset.done=1;const ok=(b.dataset.a==='1')===q[1];if(ok)sc++;
+  fb2.className='fb '+(ok?'ok':'no');fb2.textContent=(ok?'Correct. ':'Not quite. ')+q[2];b.classList.add('primary');$('qs').textContent='Score: '+sc+' / '+qs.length;
+  save('quiz/'+i+'/'+uid, ok);});
+ qz.appendChild(d);
+ if (fb) fb.on('quiz/'+i, v => { const a=Object.values(v); if(!a.length){d.querySelector('[data-live]').textContent='';return;}
+   d.querySelector('[data-live]').textContent='Class: '+Math.round(a.filter(Boolean).length/a.length*100)+'% correct ('+a.length+' answers)'; });
+});
+</script>
+</body>
+</html>
